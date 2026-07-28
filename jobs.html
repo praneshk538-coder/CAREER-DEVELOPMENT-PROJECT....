@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JOBRADAR // HIREVOLT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#090c10; --bg-alt:#0f141b; --panel:#11161e; --line:#232b36;
+    --cyan:#35f0c0; --violet:#8b5cf6; --amber:#ffb454; --text:#e7ecf2; --muted:#6b7684; --danger:#ff5c7a;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;position:relative;}
+  .grid-bg{position:fixed;inset:0;background-image:linear-gradient(rgba(53,240,192,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(53,240,192,0.04) 1px,transparent 1px);background-size:42px 42px;z-index:0;mask-image:radial-gradient(circle at 50% 10%, rgba(0,0,0,1) 0%, rgba(0,0,0,.4) 55%, transparent 100%);}
+
+  header{position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:22px 48px;border-bottom:1px solid var(--line);background:rgba(9,12,16,.6);backdrop-filter:blur(6px);flex-wrap:wrap;gap:12px;}
+  .brand{font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:20px;display:flex;align-items:center;gap:10px;}
+  .brand .dot{width:9px;height:9px;background:var(--cyan);border-radius:50%;box-shadow:0 0 12px var(--cyan);animation:pulse 2s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .brand span.sub{color:var(--muted);font-family:'JetBrains Mono',monospace;font-weight:400;font-size:12px;margin-left:4px;}
+  nav.steps{display:flex;gap:28px;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:1px;}
+  nav.steps a{color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:6px;}
+  nav.steps a.active{color:var(--cyan);}
+  nav.steps .n{border:1px solid var(--line);border-radius:3px;padding:1px 6px;font-size:10px;}
+  nav.steps a.active .n{border-color:var(--cyan);color:var(--cyan);}
+
+  main{position:relative;z-index:10;max-width:1160px;margin:0 auto;padding:48px 24px 120px;}
+
+  .page-head{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:20px;margin-bottom:30px;}
+  .page-head .tag{font-family:'JetBrains Mono',monospace;color:var(--cyan);font-size:12px;letter-spacing:2px;margin-bottom:12px;}
+  .page-head h1{font-family:'Chakra Petch',sans-serif;font-size:clamp(30px,5vw,46px);line-height:1;}
+  .live-count{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px;}
+  .live-count .led{width:7px;height:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px var(--cyan);}
+
+  .filter-bar{display:flex;gap:12px;margin-bottom:28px;flex-wrap:wrap;}
+  .filter-bar input, .filter-bar select{
+    background:var(--panel);border:1px solid var(--line);color:var(--text);padding:11px 14px;border-radius:7px;
+    font-family:'Inter',sans-serif;font-size:13.5px;outline:none;
+  }
+  .filter-bar input{flex:1;min-width:220px;}
+  .filter-bar input:focus, .filter-bar select:focus{border-color:var(--cyan);}
+
+  .job-grid{display:grid;gap:14px;}
+  .job-card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:22px;display:flex;gap:20px;align-items:flex-start;transition:border-color .15s;position:relative;overflow:hidden;}
+  .job-card:hover{border-color:var(--cyan);}
+  .job-card.new::after{content:'NEW';position:absolute;top:14px;right:16px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--amber);border:1px solid var(--amber);padding:2px 8px;border-radius:4px;}
+  .co-badge{width:52px;height:52px;border-radius:9px;background:var(--bg-alt);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:16px;color:var(--cyan);flex-shrink:0;}
+  .job-info{flex:1;min-width:0;}
+  .job-info .jtitle{font-family:'Chakra Petch',sans-serif;font-size:18px;font-weight:600;margin-bottom:4px;}
+  .job-info .jco{color:var(--muted);font-size:13px;margin-bottom:10px;}
+  .job-tags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+  .jtag{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.5px;padding:4px 9px;border-radius:4px;background:var(--bg-alt);border:1px solid var(--line);color:var(--muted);}
+  .job-meta{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);display:flex;gap:18px;flex-wrap:wrap;}
+  .job-meta b{color:var(--text);font-family:'Inter',sans-serif;font-weight:600;}
+  .apply-btn{align-self:center;padding:10px 20px;border-radius:6px;border:1px solid var(--cyan);background:transparent;color:var(--cyan);font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:13px;cursor:pointer;white-space:nowrap;transition:all .15s;}
+  .apply-btn:hover{background:var(--cyan);color:#04120e;}
+
+  /* login gate modal */
+  .gate-overlay{position:fixed;inset:0;background:rgba(5,7,10,0.85);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:100;}
+  .gate-card{width:420px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:32px;position:relative;overflow:hidden;}
+  .gate-card::before{content:'';position:absolute;top:0;left:0;width:100%;height:2px;background:linear-gradient(90deg,var(--cyan),var(--violet),transparent);}
+  .gate-card .gtag{font-family:'JetBrains Mono',monospace;color:var(--amber);font-size:11px;letter-spacing:1px;margin-bottom:10px;}
+  .gate-card h3{font-family:'Chakra Petch',sans-serif;font-size:20px;margin-bottom:8px;}
+  .gate-card p{color:var(--muted);font-size:13.5px;margin-bottom:22px;line-height:1.6;}
+  .gate-field{margin-bottom:14px;}
+  .gate-field label{display:block;font-size:10.5px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;}
+  .gate-field input{width:100%;background:var(--bg-alt);border:1px solid var(--line);border-radius:6px;padding:11px 13px;color:var(--text);font-size:14px;outline:none;}
+  .gate-field input:focus{border-color:var(--cyan);}
+  .gate-btn{width:100%;padding:13px 0;border-radius:6px;border:none;background:var(--cyan);color:#04120e;font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:14px;cursor:pointer;margin-top:6px;}
+  .gate-btn:hover{box-shadow:0 0 20px rgba(53,240,192,.35);}
+  .gate-skip{display:block;text-align:center;margin-top:14px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);cursor:pointer;}
+
+  /* NOVA assistant */
+  .nova-toggle{
+    position:fixed;bottom:26px;right:26px;z-index:50;
+    width:60px;height:60px;border-radius:50%;background:var(--violet);border:none;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;box-shadow:0 0 24px rgba(139,92,246,.5);
+    font-family:'Chakra Petch',sans-serif;font-weight:700;color:#fff;font-size:13px;
+  }
+  .nova-toggle .pulse-ring{position:absolute;inset:-6px;border-radius:50%;border:1px solid var(--violet);animation:ring 2.4s ease-out infinite;}
+  @keyframes ring{0%{opacity:.8;transform:scale(.9)}100%{opacity:0;transform:scale(1.4)}}
+
+  .nova-panel{
+    position:fixed;bottom:100px;right:26px;z-index:50;width:360px;max-height:520px;
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    display:none;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5);
+  }
+  .nova-panel.open{display:flex;}
+  .nova-head{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;background:var(--bg-alt);}
+  .nova-head .avatar{width:30px;height:30px;border-radius:50%;background:var(--violet);display:flex;align-items:center;justify-content:center;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:12px;}
+  .nova-head .nname{font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:14px;}
+  .nova-head .nstatus{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--cyan);display:flex;align-items:center;gap:5px;}
+  .nova-head .nstatus .led{width:5px;height:5px;border-radius:50%;background:var(--cyan);}
+
+  .nova-body{flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:12px;}
+  .msg{max-width:88%;padding:10px 13px;border-radius:9px;font-size:13px;line-height:1.55;}
+  .msg.bot{background:var(--bg-alt);border:1px solid var(--line);align-self:flex-start;}
+  .msg.user{background:rgba(53,240,192,0.12);border:1px solid rgba(53,240,192,0.3);align-self:flex-end;color:var(--text);}
+  .msg .mres{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);}
+  .msg .mres a{color:var(--cyan);font-family:'JetBrains Mono',monospace;font-size:11.5px;text-decoration:none;display:block;margin-top:4px;}
+  .msg .mres a:hover{text-decoration:underline;}
+
+  .quick-chips{display:flex;gap:6px;flex-wrap:wrap;padding:0 18px 12px;}
+  .qchip{font-family:'JetBrains Mono',monospace;font-size:10.5px;padding:6px 10px;border:1px solid var(--line);border-radius:14px;color:var(--muted);cursor:pointer;background:var(--bg-alt);}
+  .qchip:hover{border-color:var(--violet);color:var(--violet);}
+
+  .nova-input{display:flex;gap:8px;padding:14px 16px;border-top:1px solid var(--line);}
+  .nova-input input{flex:1;background:var(--bg-alt);border:1px solid var(--line);border-radius:20px;padding:10px 15px;color:var(--text);font-size:13px;outline:none;}
+  .nova-input input:focus{border-color:var(--violet);}
+  .nova-input button{width:38px;height:38px;border-radius:50%;background:var(--violet);border:none;color:#fff;cursor:pointer;font-size:14px;}
+
+  footer{position:relative;z-index:10;text-align:center;padding:18px;color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:11px;border-top:1px solid var(--line);}
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+
+<header>
+  <div class="brand"><span class="dot"></span>HIREVOLT<span class="sub">// career.os</span></div>
+  <nav class="steps">
+    <a href="login.html"><span class="n">00</span>ACCESS</a>
+    <a href="quiz.html"><span class="n">01</span>MINDPRINT</a>
+    <a href="courses.html"><span class="n">02</span>LEARNGRID</a>
+    <a class="active" href="jobs.html"><span class="n">03</span>JOBRADAR</a>
+  </nav>
+</header>
+
+<main>
+  <div class="page-head">
+    <div>
+      <div class="tag">STEP 03 · LIVE MATCHES</div>
+      <h1>Jobradar — Chennai</h1>
+    </div>
+    <div class="live-count"><span class="led"></span>SCANNING 6 NODES · UPDATED 4 MIN AGO</div>
+  </div>
+
+  <div class="filter-bar">
+    <input type="text" id="searchBox" placeholder="Search role, company, or skill…">
+    <select id="expFilter">
+      <option value="all">All experience</option>
+      <option value="fresher">Fresher / Intern</option>
+      <option value="1-3">1–3 years</option>
+    </select>
+    <select id="typeFilter">
+      <option value="all">All types</option>
+      <option value="fulltime">Full-time</option>
+      <option value="intern">Internship</option>
+    </select>
+  </div>
+
+  <div class="job-grid" id="jobGrid"></div>
+</main>
+
+<footer>HIREVOLT CAREER OS · JOBRADAR CHENNAI-04 · NOVA ASSISTANT ACTIVE</footer>
+
+<!-- Login gate -->
+<div class="gate-overlay" id="gateOverlay">
+  <div class="gate-card">
+    <div class="gtag">▸ ACCESS REQUIRED</div>
+    <h3>Verify to view live matches</h3>
+    <p>Jobradar shows role-matched listings once your Mindprint profile is linked. Sign in to continue, or preview the board.</p>
+    <div class="gate-field">
+      <label>College email</label>
+      <input type="email" id="gateEmail" placeholder="you@myinstitute.edu.in">
+    </div>
+    <div class="gate-field">
+      <label>Passkey</label>
+      <input type="password" id="gatePass" placeholder="••••••••••">
+    </div>
+    <button class="gate-btn" onclick="gateLogin()">UNLOCK JOBRADAR →</button>
+    <span class="gate-skip" onclick="gateSkip()">Just preview the board →</span>
+  </div>
+</div>
+
+<!-- NOVA assistant -->
+<button class="nova-toggle" onclick="toggleNova()"><span class="pulse-ring"></span>NOVA</button>
+<div class="nova-panel" id="novaPanel">
+  <div class="nova-head">
+    <div class="avatar">N</div>
+    <div style="flex:1;">
+      <div class="nname">NOVA — Placement Assistant</div>
+      <div class="nstatus"><span class="led"></span>ONLINE · notes + video linked</div>
+    </div>
+  </div>
+  <div class="nova-body" id="novaBody">
+    <div class="msg bot">Hey! I'm NOVA. I can pull lecture notes, a video walkthrough, or interview tips for anything you're prepping. Try one of these, or type your own question:</div>
+  </div>
+  <div class="quick-chips">
+    <div class="qchip" onclick="novaAsk('Resume tips')">Resume tips</div>
+    <div class="qchip" onclick="novaAsk('SQL interview basics')">SQL basics</div>
+    <div class="qchip" onclick="novaAsk('HR round questions')">HR round</div>
+  </div>
+  <div class="nova-input">
+    <input type="text" id="novaInput" placeholder="Ask NOVA anything…" onkeydown="if(event.key==='Enter')novaSend()">
+    <button onclick="novaSend()">→</button>
+  </div>
+</div>
+
+<script>
+const jobs = [
+  {co:'Velstra Systems', badge:'VS', title:'Backend Engineer — Intern', tags:['Node.js','SQL','REST APIs'], exp:'fresher', type:'intern', loc:'Guindy, Chennai', ctc:'₹25,000/mo', posted:'2 days ago', isNew:true},
+  {co:'Orbit Analytics', badge:'OA', title:'Data Analyst Trainee', tags:['SQL','Excel','Power BI'], exp:'fresher', type:'fulltime', loc:'OMR, Chennai', ctc:'₹4.2 LPA', posted:'1 day ago', isNew:true},
+  {co:'Fernwave Tech', badge:'FW', title:'Frontend Developer', tags:['React','JavaScript','CSS'], exp:'1-3', type:'fulltime', loc:'T. Nagar, Chennai', ctc:'₹6.5 LPA', posted:'5 days ago', isNew:false},
+  {co:'Cursive Labs', badge:'CL', title:'QA Engineer — Fresher', tags:['Manual Testing','Selenium'], exp:'fresher', type:'fulltime', loc:'Ambattur, Chennai', ctc:'₹3.8 LPA', posted:'1 week ago', isNew:false},
+  {co:'Nimbus Cloud Works', badge:'NC', title:'DevOps Intern', tags:['Docker','Linux','CI/CD'], exp:'fresher', type:'intern', loc:'Sholinganallur, Chennai', ctc:'₹18,000/mo', posted:'3 days ago', isNew:true},
+  {co:'Redgate Systems', badge:'RS', title:'Java Developer', tags:['Java','Spring Boot','MySQL'], exp:'1-3', type:'fulltime', loc:'Perungudi, Chennai', ctc:'₹7.2 LPA', posted:'6 days ago', isNew:false},
+  {co:'Brightloop Consulting', badge:'BL', title:'Business Analyst — Fresher', tags:['SQL','Communication','Excel'], exp:'fresher', type:'fulltime', loc:'Nungambakkam, Chennai', ctc:'₹4.8 LPA', posted:'4 days ago', isNew:false},
+  {co:'Pixelharbor Studio', badge:'PH', title:'UI/UX Design Intern', tags:['Figma','Prototyping'], exp:'fresher', type:'intern', loc:'Adyar, Chennai', ctc:'₹15,000/mo', posted:'2 days ago', isNew:true},
+];
+
+const grid = document.getElementById('jobGrid');
+
+function renderJobs(){
+  const q = document.getElementById('searchBox').value.toLowerCase();
+  const exp = document.getElementById('expFilter').value;
+  const type = document.getElementById('typeFilter').value;
+  grid.innerHTML = '';
+  jobs.filter(j=>{
+    const matchesQ = !q || j.title.toLowerCase().includes(q) || j.co.toLowerCase().includes(q) || j.tags.some(t=>t.toLowerCase().includes(q));
+    const matchesExp = exp === 'all' || j.exp === exp;
+    const matchesType = type === 'all' || j.type === type;
+    return matchesQ && matchesExp && matchesType;
+  }).forEach(j=>{
+    const card = document.createElement('div');
+    card.className = 'job-card' + (j.isNew ? ' new' : '');
+    card.innerHTML = `
+      <div class="co-badge">${j.badge}</div>
+      <div class="job-info">
+        <div class="jtitle">${j.title}</div>
+        <div class="jco">${j.co} · ${j.loc}</div>
+        <div class="job-tags">${j.tags.map(t=>`<span class="jtag">${t}</span>`).join('')}</div>
+        <div class="job-meta"><span>CTC: <b>${j.ctc}</b></span><span>Posted ${j.posted}</span><span>${j.type === 'intern' ? 'Internship' : 'Full-time'}</span></div>
+      </div>
+      <button class="apply-btn" onclick="novaAsk('How do I prep for a ${j.title} role at a company like ${j.co}?')">APPLY →</button>`;
+    grid.appendChild(card);
+  });
+  if(!grid.children.length){
+    grid.innerHTML = '<div style="color:var(--muted);font-family:JetBrains Mono, monospace;font-size:13px;padding:30px 0;text-align:center;">No matches on the radar for those filters yet.</div>';
+  }
+}
+['searchBox','expFilter','typeFilter'].forEach(id=>document.getElementById(id).addEventListener('input', renderJobs));
+renderJobs();
+
+// gate
+function gateLogin(){
+  document.getElementById('gateOverlay').style.display = 'none';
+}
+function gateSkip(){
+  document.getElementById('gateOverlay').style.display = 'none';
+}
+
+// NOVA
+function toggleNova(){
+  document.getElementById('novaPanel').classList.toggle('open');
+}
+
+const novaKB = {
+  'resume tips': {
+    text: "Keep it one page. Lead each bullet with an action + a measurable result — \"Built a REST API that cut response time by 40%\" beats \"Worked on backend.\" Cut CGPA and objective statements; recruiters skim in under 10 seconds.",
+    video: "https://www.youtube.com/results?search_query=resume+tips+for+freshers+placement",
+    note: "Notes: 1-page limit · quantify impact · skills matched to the JD · no generic objective line."
+  },
+  'sql interview basics': {
+    text: "Expect JOINs, GROUP BY with HAVING, and at least one query using a subquery or window function. Practice explaining your query out loud — interviewers care as much about reasoning as the final SQL.",
+    video: "https://www.youtube.com/results?search_query=sql+interview+questions+for+freshers",
+    note: "Notes: INNER vs LEFT JOIN · GROUP BY + HAVING vs WHERE · basic window functions (RANK, ROW_NUMBER)."
+  },
+  'hr round questions': {
+    text: "\"Tell me about yourself\" should be 60 seconds: current role/study, one relevant project, why this company. Prepare one real example of handling conflict or failure — vague answers here are the most common rejection reason.",
+    video: "https://www.youtube.com/results?search_query=hr+interview+questions+and+answers+for+freshers",
+    note: "Notes: 60-second intro · 1 conflict story · 1 failure story · 2 questions ready to ask them back."
+  }
+};
+
+function addMsg(html, cls){
+  const body = document.getElementById('novaBody');
+  const div = document.createElement('div');
+  div.className = 'msg ' + cls;
+  div.innerHTML = html;
+  body.appendChild(div);
+  body.scrollTop = body.scrollHeight;
+}
+
+function novaAsk(question){
+  document.getElementById('novaPanel').classList.add('open');
+  addMsg(question, 'user');
+  respond(question);
+}
+
+function novaSend(){
+  const input = document.getElementById('novaInput');
+  const q = input.value.trim();
+  if(!q) return;
+  addMsg(q, 'user');
+  input.value = '';
+  respond(q);
+}
+
+function respond(question){
+  const key = Object.keys(novaKB).find(k => question.toLowerCase().includes(k.split(' ')[0]));
+  setTimeout(()=>{
+    if(key){
+      const entry = novaKB[key];
+      addMsg(`${entry.text}<div class="mres">${entry.note}<a href="${entry.video}" target="_blank" rel="noopener">▸ Watch a related lecture</a></div>`, 'bot');
+    } else {
+      addMsg(`I don't have a prepped note for that exact one yet — try "resume tips," "SQL interview basics," or "HR round questions," or ask about a specific role on the board and I'll pull prep material for it.`, 'bot');
+    }
+  }, 500);
+}
+</script>
+</body>
+</html>
